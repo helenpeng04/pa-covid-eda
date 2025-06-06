@@ -1,0 +1,143 @@
+---
+title: "Exploring COVID Cases and Deaths in Pennyslvania"
+author: "Helen Peng"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(ggmosaic)
+theme_set(theme_light())
+covid_cases_deaths <- read_csv("https://raw.githubusercontent.com/36-SURE/2025/main/data/covid_cases_deaths.csv")
+```
+
+# Question 1
+
+Which Pennsylvania counties experienced the highest per-capita COVID-19 case/death rates, and how did these case rates evolve over time during the pandemic?
+
+```{r}
+# table(covid_cases_deaths$county)
+# str(covid_cases_deaths)
+# length(unique(covid_cases_deaths$county))
+
+# Plot the top 5 counties with the highest cumulative case rate (cases_cume_rate) on the last date in the dataset
+
+last_date <- max(covid_cases_deaths$date)
+
+top_5_counties <- covid_cases_deaths %>%
+  filter(date == last_date) %>%
+  slice_max(order_by = cases_cume_rate, n = 5)
+
+covid_cases_deaths |> 
+  filter(county %in% top_5_counties$county) |> 
+  ggplot(aes(x = date, y = cases_cume_rate, color = county)) + 
+  geom_line() +
+  labs(
+    title = "Cumulative COVID-19 Case Rates in Top 5 Pennsylvania Counties",
+    subtitle = "Per-capita cumulative confirmed and probable cases per 100,000 people",
+    x = "Date",
+    y = "Cumulative Case Rate",
+    color = "County"
+  ) +
+  theme_minimal()
+```
+
+```{r}
+# do the same for deaths
+```
+
+```{r}
+
+# suspected that higher population would lead to higher cumulative case rate but we were surprised that forest (low population) was here
+top_5_counties$population
+summary(covid_cases_deaths$population)
+```
+
+# Question 2
+
+Is population size associated with higher or lower per-capita COVID-19 case or death rates?
+
+```{r}
+last_date <- max(covid_cases_deaths$date)
+
+covid_cases_deaths |> 
+  filter(date == last_date) |> 
+  select(county, population, cases_cume_rate) |> 
+  ggplot(aes(x = population, y = cases_cume_rate)) +
+  geom_point(alpha = 0.7, color = "steelblue") +
+  geom_smooth(method = "lm", se = TRUE, color = "firebrick") +
+  labs(
+    title = "Do More Populous Counties Have Higher COVID-19 Case Rates?",
+    subtitle = paste("Cumulative confirmed & probable cases per 100,000 residents\nData as of", last_date),
+    x = "County Population",
+    y = "Cumulative COVID-19 Case Rate (per 100,000)"
+  ) 
+
+cor(county_summary$population, 
+    county_summary$cases_cume_rate, 
+    use = "complete.obs")
+```
+
+Weak Negative Correlation: -0.1489939
+
+County population size does not predict per-capita COVID-19 case rates. The spread was not disproportionately concentrated in either large or small counties when adjusting for population.
+
+```{r}
+covid_cases_deaths |> 
+  filter(date == last_date) |> 
+  select(county, population, deaths_cume_rate) |> 
+  ggplot(aes(x = population, y = deaths_cume_rate)) +
+  geom_point(alpha = 0.7, color = "steelblue") +
+  geom_smooth(method = "lm", se = TRUE, color = "firebrick") +
+  labs(
+    title = "Do More Populous Counties Have Higher COVID-19 Death Rates?",
+    subtitle = paste("Cumulative confirmed deaths per 100,000 population \nData as of", last_date),
+    x = "County Population",
+    y = "Cumulative COVID-19 Death Rate (per 100,000)"
+  ) 
+
+cor(county_summary$population, 
+    county_summary$deaths_cume_rate, 
+    use = "complete.obs")
+```
+
+Stronger Negative Correlation: -0.4292939
+
+As population increases, the per-capita COVID-19 death rate tends to decrease. In other words, less populous counties had higher death rates per 100,000 people on average.
+
+# Question 3
+
+Does a higher number of cases correspond to a higher number of deaths?
+
+Why is this an important question? Obviously looking back on COVID this sounds like an obvious question but at the time it could be important to determine since higher number of cases doesn't necessarily mean higher number of deaths as maybe the recover rate is low and there is no need to be concern over mortality rate
+
+```{r}
+covid_cases_deaths |> 
+  filter(date == last_date) |> 
+  slice_max(order_by = cases_cume_rate, n = 25) |> 
+  select(county, cases_cume, deaths_cume) |> 
+  pivot_longer(cols = c(cases_cume, deaths_cume),
+               names_to = "metric",
+               values_to = "count") |> 
+  mutate(metric = recode(metric,
+                         cases_cume = "Cases",
+                         deaths_cume = "Deaths")) |>
+  ggplot(aes(x = reorder(county, -count), y = count, fill = metric)) +
+  geom_col(position = "dodge") +
+  coord_flip() +
+  labs(
+    title = "Cumulative COVID-19 Cases and Deaths in Top 25 Counties",
+    subtitle = paste("Data as of", last_date),
+    x = "County",
+    y = "Cumulative Counts",
+    fill = "Metric",
+  ) 
+
+cor(covid_cases_deaths$cases_cume, covid_cases_deaths$deaths_cume, use = "complete.obs")
+```
+
+High positive correlation: 0.9575291
+
+These are the 25 counties that were hit the hardest (highest per capita rate)
+
+# Question 4 (Clustering)
