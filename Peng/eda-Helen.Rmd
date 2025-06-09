@@ -38,17 +38,30 @@ covid_cases_deaths |>
     x = "Date",
     y = "Cumulative Case Rate",
     color = "County"
-  ) +
-  theme_minimal()
+  ) 
+
+top_5_counties$population
+summary(covid_cases_deaths$population)
 ```
 
 ```{r}
 # do the same for deaths
-```
+top_5_counties <- covid_cases_deaths %>%
+  filter(date == last_date) %>%
+  slice_max(order_by = deaths_cume_rate, n = 5)
 
-```{r}
+covid_cases_deaths |> 
+  filter(county %in% top_5_counties$county) |> 
+  ggplot(aes(x = date, y = deaths_cume_rate, color = county)) + 
+  geom_line() +
+  labs(
+    title = "Cumulative COVID-19 Death Rates in Top 5 Pennsylvania Counties",
+    subtitle = "Per-capita cumulative deaths per 100,000 people",
+    x = "Date",
+    y = "Cumulative Death Rate",
+    color = "County"
+  ) 
 
-# suspected that higher population would lead to higher cumulative case rate but we were surprised that forest (low population) was here
 top_5_counties$population
 summary(covid_cases_deaths$population)
 ```
@@ -58,8 +71,6 @@ summary(covid_cases_deaths$population)
 Is population size associated with higher or lower per-capita COVID-19 case or death rates?
 
 ```{r}
-last_date <- max(covid_cases_deaths$date)
-
 covid_cases_deaths |> 
   filter(date == last_date) |> 
   select(county, population, cases_cume_rate) |> 
