@@ -142,7 +142,8 @@ covid_cases_deaths |>
     x = "County",
     y = "Cumulative Counts",
     fill = "Metric",
-  ) 
+  )  +
+  ggthemes::scale_color_colorblind()
 
 cor(covid_cases_deaths$cases_cume, covid_cases_deaths$deaths_cume, use = "complete.obs")
 ```
@@ -220,7 +221,7 @@ ggplot(county_level, aes(x = cases_cume_rate, y = deaths_cume_rate, color = clus
   geom_point(size = 3) +
   stat_ellipse(level = 0.95, linetype = "dashed") +  
   ggthemes::scale_color_colorblind() + 
-  # ggrepel::geom_text_repel(aes(label = county), size = 3, max.overlaps = 50) +
+  ggrepel::geom_text_repel(aes(label = county), size = 2, max.overlaps = 50) +
   labs(
     title = "County Clusters by COVID Case/Death Rates",
     x = "Cumulative Case Rate",
@@ -229,6 +230,7 @@ ggplot(county_level, aes(x = cases_cume_rate, y = deaths_cume_rate, color = clus
   theme_minimal() +
   theme(legend.position = "right")
 
+table(county_level$cluster)
 ```
 
 # Hierarchical Clustering 
