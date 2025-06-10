@@ -151,4 +151,84 @@ High positive correlation: 0.9575291
 
 These are the 25 counties that were hit the hardest (highest per capita rate)
 
-# Question 4 (Clustering)
+# K-Means Clustering
+
+```{r}
+# attempting kmeans
+
+clean_df <- covid_cases_deaths |>
+  drop_na() |> 
+  mutate(
+    std_case_cumu_rates = as.numeric(scale(cases_cume_rate, center = TRUE, scale = TRUE)),
+    std_death_cumu_rates = as.numeric(scale(deaths_cume_rate, center = TRUE, scale = TRUE))
+  )
+
+std_kmeans <- clean_df |> 
+  select(std_case_cumu_rates, std_death_cumu_rates) |> 
+  kmeans(algorithm = "Lloyd", centers = 4, nstart = 1)
+
+clean_df |>
+  mutate(
+    county_clusters = as.factor(std_kmeans$cluster)
+  ) |>
+  ggplot(aes(x = std_case_cumu_rates, y = std_death_cumu_rates,
+             color = county_clusters)) +
+  geom_point(size = 1) + 
+  ggthemes::scale_color_colorblind() +
+  theme(legend.position = "bottom") +
+  coord_fixed()
+
+# what is this plot??
+# could i maybe use PCA since all variables are so correlated idk what features to use to cluster?? okay im doing that
+```
+
+```{r}
+std_covid_features <- covid_cases_deaths |> 
+  drop_na() |>
+  select(where(is.numeric)) |> 
+  scale()
+
+kmeans_many_features <- std_covid_features |> 
+  kmeans(algorithm = "Lloyd", centers = 4, nstart = 30) 
+
+library(factoextra)
+kmeans_many_features |> 
+  fviz_cluster(data = std_covid_features,
+               geom = "point",
+               ellipse = TRUE) +
+  ggthemes::scale_color_colorblind() +
+  theme_light()
+
+```
+
+```{r}
+county_level <- covid_cases_deaths |>
+  group_by(county) |>
+  summarize(
+    cases_cume_rate = max(cases_cume_rate, na.rm = TRUE),
+    deaths_cume_rate = max(deaths_cume_rate, na.rm = TRUE)
+  )
+
+county_scaled <- county_level |>
+  select(-county) |>
+  scale()
+
+kmeans_result <- kmeans(county_scaled, centers = 4, nstart = 25)
+county_level$cluster <- as.factor(kmeans_result$cluster)
+
+ggplot(county_level, aes(x = cases_cume_rate, y = deaths_cume_rate, color = cluster)) +
+  geom_point(size = 3) +
+  stat_ellipse(level = 0.95, linetype = "dashed") +  
+  ggthemes::scale_color_colorblind() + 
+  # ggrepel::geom_text_repel(aes(label = county), size = 3, max.overlaps = 50) +
+  labs(
+    title = "County Clusters by COVID Case/Death Rates",
+    x = "Cumulative Case Rate",
+    y = "Cumulative Death Rate"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "right")
+
+```
+
+# Hierarchical Clustering 
