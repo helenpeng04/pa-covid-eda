@@ -151,6 +151,39 @@ cor(covid_cases_deaths$cases_cume_rate, covid_cases_deaths$deaths_cume_rate, use
 
 High positive correlation: 0.9575291
 
+# PCA
+
+```{r}
+covid_cases_deaths_feat <- covid_cases_deaths |> 
+  select(-county, -date) # remove non-numeric variables
+covid_pca <- prcomp(covid_cases_deaths_feat, center = TRUE, scale. = TRUE)
+
+covid_pc_matrix <- covid_pca$x
+# head(covid_pc_matrix)
+covid_pca$rotation
+
+covid <- covid_cases_deaths |> 
+  mutate(pc1 = covid_pc_matrix[,1], 
+         pc2 = covid_pc_matrix[,2])
+covid |> 
+  ggplot(aes(x = pc1, y = pc2)) +
+  geom_point(alpha = 0.5) +
+  labs(x = "PC 1", y = "PC 2")
+```
+
+```{r}
+library(factoextra)
+# fviz_pca_var(): projection of variables
+# fviz_pca_ind(): display observations with first two PCs
+covid_pca |> 
+  fviz_pca_biplot(label = "var",
+                  alpha.ind = 0.25,
+                  alpha.var = 0.75,
+                  labelsize = 5,
+                  col.var = "darkblue",
+                  repel = TRUE)
+```
+
 # K-Means Clustering
 
 ```{r}
