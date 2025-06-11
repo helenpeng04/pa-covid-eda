@@ -125,7 +125,7 @@ Why is this an important question? Obviously looking back on COVID this sounds l
 ```{r}
 covid_cases_deaths |> 
   filter(date == last_date) |> 
-  slice_max(order_by = cases_cume_rate, n = 25) |> 
+  slice_head(n = 30) |> 
   select(county, cases_cume, deaths_cume) |> 
   pivot_longer(cols = c(cases_cume, deaths_cume),
                names_to = "metric",
@@ -137,7 +137,7 @@ covid_cases_deaths |>
   geom_col(position = "dodge") +
   coord_flip() +
   labs(
-    title = "Cumulative COVID-19 Cases and Deaths in Top 25 Counties",
+    title = "Cumulative COVID-19 Cases and Deaths by Counties",
     subtitle = paste("Data as of", last_date),
     x = "County",
     y = "Cumulative Counts",
@@ -146,17 +146,14 @@ covid_cases_deaths |>
   ggthemes::scale_color_colorblind()
 
 cor(covid_cases_deaths$cases_cume, covid_cases_deaths$deaths_cume, use = "complete.obs")
+cor(covid_cases_deaths$cases_cume_rate, covid_cases_deaths$deaths_cume_rate, use = "complete.obs")
 ```
 
 High positive correlation: 0.9575291
 
-These are the 25 counties that were hit the hardest (highest per capita rate)
-
 # K-Means Clustering
 
 ```{r}
-# attempting kmeans
-
 clean_df <- covid_cases_deaths |>
   drop_na() |> 
   mutate(
@@ -200,6 +197,7 @@ kmeans_many_features |>
   ggthemes::scale_color_colorblind() +
   theme_light()
 
+# okay but like how do you interpret this?? also warning did not converge??
 ```
 
 ```{r}
@@ -233,4 +231,29 @@ ggplot(county_level, aes(x = cases_cume_rate, y = deaths_cume_rate, color = clus
 table(county_level$cluster)
 ```
 
-# Hierarchical Clustering 
+```{r}
+library(factoextra)
+county_level |> 
+  select(cases_cume_rate, deaths_cume_rate) |> 
+  fviz_nbclust(kmeans, method = "wss")
+```
+
+```{r}
+county_level |> 
+  select(cases_cume_rate, deaths_cume_rate) |> 
+  fviz_nbclust(kmeans, method = "silhouette")
+```
+
+```{r}
+library(cluster)
+
+county_level_gap_stat <- county_level |> 
+  select(cases_cume_rate, deaths_cume_rate) |> 
+  clusGap(FUN = kmeans, nstart = 30, K.max = 10)
+
+county_level_gap_stat |> 
+  print(method = "firstmax")
+
+county_level_gap_stat |> 
+  fviz_gap_stat(maxSE = list(method = "firstmax"))
+```
