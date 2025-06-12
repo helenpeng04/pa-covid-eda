@@ -156,7 +156,7 @@ combined_plot
 
 Does a higher number of cases correspond to a higher number of deaths?
 
-Why is this an important question? Obviously looking back on COVID this sounds like an obvious question but at the time it could be important to determine since higher number of cases doesn't necessarily mean higher number of deaths as maybe the recover rate is low and there is no need to be concern over mortality rate
+Why is this an important question? Obviously looking back on COVID this sounds like an obvious question but at the time it could be important to determine since higher number of cases doesn't necessarily mean higher number of deaths as maybe the recover rate is high and there is no need to be concern over mortality rate
 
 ```{r}
 covid_cases_deaths |> 
