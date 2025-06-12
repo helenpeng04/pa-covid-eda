@@ -116,6 +116,42 @@ Stronger Negative Correlation: -0.4292939
 
 As population increases, the per-capita COVID-19 death rate tends to decrease. In other words, less populous counties had higher death rates per 100,000 people on average.
 
+```{r}
+library(patchwork)
+case_rate_population <-covid_cases_deaths |> 
+  filter(date == last_date) |> 
+  select(county, population, cases_cume_rate) |> 
+  ggplot(aes(x = population, y = cases_cume_rate)) +
+  geom_point(alpha = 0.7, color = "steelblue") +
+  geom_smooth(method = "lm", se = TRUE, color = "firebrick") +
+  labs(
+    x = "County Population",
+    y = "Cumulative Case Rate (per 100,000)"
+  ) 
+
+death_rate_population <- covid_cases_deaths |> 
+  filter(date == last_date) |> 
+  select(county, population, deaths_cume_rate) |> 
+  ggplot(aes(x = population, y = deaths_cume_rate)) +
+  geom_point(alpha = 0.7, color = "steelblue") +
+  geom_smooth(method = "lm", se = TRUE, color = "firebrick") +
+  labs(
+    x = "County Population",
+    y = "Cumulative Death Rate (per 100,000)"
+  ) 
+
+combined_plot <- case_rate_population + death_rate_population +
+  plot_layout(ncol = 2) + 
+  plot_annotation(
+    title = "COVID-19 Case and Death Rates vs. Population",
+    subtitle = paste("Data as of", last_date),
+    theme = theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5),
+                  plot.subtitle = element_text(size = 12, face = "bold", hjust = 0.5))
+  )
+
+combined_plot
+```
+
 # Question 3
 
 Does a higher number of cases correspond to a higher number of deaths?
