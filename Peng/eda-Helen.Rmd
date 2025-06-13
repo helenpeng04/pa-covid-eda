@@ -298,10 +298,23 @@ ggplot(county_level, aes(x = cases_cume_rate, y = deaths_cume_rate, color = clus
   theme(legend.position = "right")
 
 table(county_level$cluster)
+
+cluster_summary <- county_level |>
+  group_by(cluster) |>
+  summarize(
+    n_counties = n(),
+    mean_case_rate = mean(cases_cume_rate, na.rm = TRUE),
+    sd_case_rate = sd(cases_cume_rate, na.rm = TRUE),
+    mean_death_rate = mean(deaths_cume_rate, na.rm = TRUE),
+    sd_death_rate = sd(deaths_cume_rate, na.rm = TRUE)
+  )
+
+print(cluster_summary)
 ```
 
 ```{r}
 library(factoextra)
+
 county_level |> 
   select(cases_cume_rate, deaths_cume_rate) |> 
   fviz_nbclust(kmeans, method = "wss")
