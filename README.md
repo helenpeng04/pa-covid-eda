@@ -4,6 +4,7 @@ Context: Carnegie Mellon University SURE 2025 Program \
 Team Members: Helen Peng, Lily Fransen, Maximus Liu 
 
 ![R](https://img.shields.io/badge/code-R-1f425f.svg)
+![RMarkdown](https://img.shields.io/badge/tool-RMarkdown-75AADB.svg)
 ![Google Slides](https://img.shields.io/badge/presentation-Google%20Slides-4285F4.svg)
 
 ## Overview
